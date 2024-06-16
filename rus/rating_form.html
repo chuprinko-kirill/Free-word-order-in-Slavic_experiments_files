@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV to Table from URL</title>
+</head>
+<body>
+    <!-- Container to display the generated table -->
+    <div id="tableContainer"></div>
+
+    <script>
+        // Function to parse CSV text into an array of values for the first column
+        function parseCSV(text) {
+            // Split the text into an array of rows
+            const rows = text.split('\n').filter(row => row.trim() !== '');
+
+            // Map over the rows starting from the second row (to avoid the header) to create an array of values for the first column
+            const data = rows.slice(1).map(row => {
+                const values = row.split(',');
+                return values[0]; // Only keep the first column
+            });
+
+            return data;
+        }
+        //Function to randomize the data //it works becasue in our case data is a one-dimensional array!
+        function shuffle(data) {
+                // Store the first element of the array
+                const firstElement = data[0];
+                // Shuffle the rest of the elements (starting from index 1)
+                for (let i = data.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * i) + 1; // Random index between 1 and i
+                    [data[i], data[j]] = [data[j], data[i]]; // Swap elements
+                }
+                // Place the first element back at index 0
+                data[0] = firstElement;
+                return data;
+            }
+
+
+        // Function to create a table from an array of objects
+        function createTable(data) {
+            // Create a table element
+            const table = document.createElement('table');
+
+            // Create the table body
+            const tbody = table.createTBody();
+            data.forEach((value, index) => {
+                const tr = tbody.insertRow();
+                const td1 = tr.insertCell();
+                
+                td1.textContent = value;
+                
+                 const scaleTd = tr.insertCell(); // Insert a cell for the scale
+                scaleTd.colSpan = 5; // Set the colspan to 5
+                const scaleContainer = document.createElement('div');
+                scaleContainer.classList.add('scale-container');
+                const scaleOptions = document.createElement('div');
+                scaleOptions.classList.add('scale-options');
+                for (let i = 1; i <= 5; i++) { // Create radio buttons for the scale
+                    const input = document.createElement('input');
+                    input.type = 'radio';
+                    input.id = `item${index + 1}-option${i}`;
+                    input.name = `item${index + 1}`;
+                    input.value = i;
+                    const label = document.createElement('label');
+                    label.htmlFor = `item${index + 1}-option${i}`;
+                    label.textContent = i;
+                    scaleOptions.appendChild(input);
+                    scaleOptions.appendChild(label);
+    
+    
+                }
+    
+    scaleContainer.appendChild(scaleOptions);
+    scaleTd.appendChild(scaleContainer);
+});
+return table;
+        }
+
+        
+
+
+
+
+        // Function to fetch CSV data from a URL
+        async function loadCsvFromUrl(url) {
+            try {
+                // Fetch the CSV file
+                const response = await fetch(url);
+                // Check if the fetch was successful
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                // Get the CSV text from the response
+                const text = await response.text();
+                // Parse the CSV text and create a table
+                const csvData = parseCSV(text);
+                const randomized_data = shuffle(csvData);
+                const table = createTable(randomized_data);
+                
+
+                // Display the table in the table container
+                const tableContainer = document.getElementById('tableContainer');
+                tableContainer.innerHTML = '';
+                tableContainer.appendChild(table);
+            } catch (error) {
+                console.error('Error fetching or parsing CSV:', error);
+            }
+        }
+
+        // URL of the CSV file hosted on GitHub
+        const csvUrl = 'https://raw.githubusercontent.com/chuprinko-kirill/Free-word-order-in-Slavic_experiments_files/main/rus/rus_list1.csv';
+
+        // Load the CSV data from the predefined URL when the page loads
+        window.onload = function() {
+            loadCsvFromUrl(csvUrl);
+        };
+    </script>
+</body>
+</html>
